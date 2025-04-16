@@ -1,0 +1,196 @@
+---
+title: "Informe práctico 2. Armoa - Ferenese"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rnaturalearth)
+library(dplyr)
+library (gt)
+tornados <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-16/tornados.csv')
+
+```
+
+Usaremos la base de datos con información de tornados de la [NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page](https://www.spc.noaa.gov/wcm/#data) en Estados Unidos. 
+
+
+### **Parte 1**
+
+**Pregunta:** ¿Cómo es la distribución espacial de los tornados, existen zonas más afectas? ¿Cambia la distribución espacial según la magnitud de los tornados?
+
+
+**Introducción:** 
+"En mi exploración de la distribución espacial de tornados en los Estados Unidos, inicialmente calculé la frecuencia de tornados por estado. Utilicé datos geoespaciales de los estados y la frecuencia de tornados para crear una coropleta, destacando áreas más afectadas y excluyendo Alaska y Hawái para una visualización más centrada en las zonas mas afectadas ya que no hay actividad practicamente. Posteriormente, profundicé en la distribución, utilizando un gráfico de dispersión con jitter y ajustando los rangos geográficos para analizar la relación entre la magnitud de los tornados y su ubicación. Este enfoque revela patrones geográficos y proporciona una visión integral de la actividad de tornados en los Estados Unidos."
+
+**Enfoque:** 
+"En el análisis de la distribución espacial de tornados en Estados Unidos, adoptamos un enfoque multifacético. Inicialmente, mediante una coropleta, identificamos áreas más afectadas al calcular la frecuencia de tornados por estado y excluimos Alaska y Hawái para una visualización más precisa ya que no hay actividad practicamente. Luego, utilizando un gráfico de dispersión con jitter, refinamos nuestra exploración al ajustar los rangos geográficos, centrándonos en la relación entre la magnitud de los tornados y su ubicación. Este enfoque integral nos permitió examinar patrones geográficos y comprender cómo la magnitud impacta la distribución de tornados en el país."
+
+**Analisis:**
+
+# resolucion de ¿Cómo es la distribución espacial de los tornados, existen zonas más afectas?
+
+```{r}
+
+
+# Calcular la frecuencia de tornados por estado
+
+tornado_frequency <- tornados %>% 
+  group_by(st) %>% 
+  summarise(tornado_count = n())
+
+# Descargar datos
+
+Usa <- ne_states(country = 'united states of america', returnclass = 'sf') %>%
+  filter(! name %in% c('Alaska', 'Hawaii')) %>%
+  left_join(tornado_frequency,  c("postal" = "st"))
+
+
+# Crear el gráfico
+
+ggplot(Usa) +
+geom_sf(aes(fill = tornado_count))+
+   theme_minimal() +
+   theme(
+    legend.background = element_rect(fill = "gray", color = "black", linewidth = 1),
+    panel.background = element_rect(fill = "gray", color = "black", linewidth = 2)
+  )
+
+```
+# resolucion ¿Cambia la distribución espacial según la magnitud de los tornados?
+
+```{r}
+
+
+# Calcular la frecuencia de tornados por estado
+tornado_frequency <- tornados %>% 
+  group_by(st) %>% 
+  summarise(tornado_count = n())
+
+# Descargar datos
+Usa <- ne_states(country = 'united states of america', returnclass = 'sf') %>%
+  filter(! name %in% c('Alaska', 'Hawaii'))
+
+# Crear el gráfico con jitter
+ggplot() +
+    geom_jitter(
+    data = filter(tornados, slon >= -135 & slat >= 20),  # Excluir puntos con longitud menor a -130 y latitud menor a 20
+    aes(x = slon, y = slat, color = mag),
+    alpha = 0.7,
+    width = 0.1,
+    height = 0.1
+  ) +
+  geom_sf(data = Usa, fill = NA, color = "black") +
+  scale_color_viridis_c() +
+  labs(
+    title = "Distribución espacial de tornados en Estados Unidos",
+    x = "Longitud",
+    y = "Latitud",
+    color = "Magnitud"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "gray", color = "black", linewidth = 1),
+    panel.background = element_rect(fill = "gray", color = "black", linewidth = 2)
+  )
+
+```
+
+**Discusión:** 
+"Este análisis detallado de la distribución espacial de tornados en los Estados Unidos revela la importancia de un enfoque integral. La exclusión de Alaska y Hawái, dados sus bajos niveles de actividad, permite una visualización más precisa de las zonas más afectadas en la coropleta. Al explorar la relación entre la magnitud de los tornados y su ubicación mediante un gráfico de dispersión, identificamos patrones geográficos significativos. Esta aproximación no solo resalta la diversidad en la intensidad y ubicación de los tornados, sino que también destaca la utilidad de considerar múltiples dimensiones para comprender mejor estos fenómenos meteorológicos en el contexto geográfico de los Estados Unidos."
+
+### **Parte 2**
+
+**Pregunta:**  ¿Cuál es el estado con la mayor cantidad de tornados registrados en la base de datos y cuántos tornados ocurrieron en ese estado? ¿Cómo varía la distribución de los tornados a lo largo de los meses en diferentes estados?
+
+**Introducción:** 
+
+Este estudio se centra en dos aspectos cruciales de la actividad tornádica en los Estados Unidos. En primer lugar, operamos los datos mediante una tabla con con columnas imponentes en información, donde filtramos los diez estados más afectados con la cantidad de tornados, los heridos, los muertos y la pérdida en obras que causaron dichas catástrofes; proporcionando una visión precisa de la magnitud de este fenómeno en un área específica del país. Además, utilizando un gráfico de barras exploramos cómo varía la distribución de los tornados a lo largo de los meses en diferentes estados, con el fin de comprender las fluctuaciones estacionales en la actividad tornádica en todo el territorio continental.
+
+
+**Enfoque:** 
+
+Para abordar la identificación del estado con la mayor cantidad de tornados, se utilizó un análisis detallado de la frecuencia de tornados por estado. Los datos se agruparon y se generó una tabla que muestra los diez estados con la mayor actividad tornádica, incluyendo información detallada sobre la cantidad de tornados, heridos, muertos y pérdidas económicas asociadas.
+
+En relación con la variación estacional de los tornados, se optó por representar visualmente la distribución de tornados a lo largo de los meses en diferentes estados. Utilizando un gráfico de barras apiladas, se proporciona una representación visual clara y significativa de cómo varía la actividad tornádica mes a mes en varios estados, resaltando el pico más alto de tornados y su distribución a lo largo del año.
+
+**Analisis:**
+
+```{r}
+# Calcular la frecuencia de tornados por estado
+frecuencia_tornados_estado <- tornados %>% 
+  group_by(st) %>% 
+  summarise(
+    cantidad_tornados = n(),
+    total_heridos = sum(inj, na.rm = TRUE),
+    total_muertos = sum(fat, na.rm = TRUE),
+    perdidas_dolares = sum(loss, na.rm = TRUE)
+  )
+
+# Encontrar el top 10 de estados con más tornados
+top_10_estados <- frecuencia_tornados_estado %>%
+  arrange(desc(cantidad_tornados)) %>%
+  slice_head(n = 10)
+
+
+tabla_top_10_estados <- top_10_estados %>%
+  mutate(Estado = state.name[match(st, state.abb)]) %>%
+  select(Estado, cantidad_tornados, total_heridos, total_muertos, perdidas_dolares) %>%
+  gt() %>%
+  tab_header(
+    title = "Top 10 Estados con más tornados",
+    subtitle = "Detalles de tornados, heridos, muertos y pérdidas en dólares"
+  ) %>%
+  cols_label(
+    Estado = "Estado",
+    cantidad_tornados = "Tornados",
+    total_heridos = "Total de heridos",
+    total_muertos = "Total de muertos",
+    perdidas_dolares = "Pérdidas en dólares"
+  ) %>%
+  fmt_number(
+    columns = c(cantidad_tornados, total_heridos, total_muertos, perdidas_dolares),
+    decimals = 0
+  ) %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "lavender"), # Color de fondo de celda
+      cell_text(color = "black")     # Color del texto en celda
+    ),
+    locations = cells_body()
+  )
+
+tabla_top_10_estados
+```
+
+```{r }
+tornado_frequency_month_state <- tornados %>% 
+  group_by(st, mo) %>% 
+  summarise(tornado_count = n(), .groups = 'drop')
+
+ggplot(tornado_frequency_month_state, aes(x = factor(mo, levels = 1:12), y = tornado_count, fill = factor(st))) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(
+    title = "Distribución de tornados por mes en diferentes estados",
+    x = "Mes",
+    y = "Cantidad de tornados"
+  ) +
+  scale_fill_discrete(name = "Estado") +
+  annotate("text", x = 5, y = max(tornado_frequency_month_state$tornado_count) + 50, 
+           label = "Pico más alto de tornados", color = "black", size = 4, fontface = "italic", hjust = -0.2, vjust = -20) +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "gray", color = "black", linewidth = 1),
+    panel.background = element_rect(fill = "gray", color = "black", linewidth = 2)
+  )
+
+
+```
+
+**Discusión:** 
+El análisis de la tabla revela la disparidad en la actividad tornádica entre estados. Texas destaca con una notable frecuencia de 9,265 tornados, acompañada de considerables cifras de 9,525 heridos, 594 muertos y pérdidas económicas que superan los 10 billones de dólares. Esta diferencia en la magnitud de los eventos subraya la necesidad de estrategias de preparación adaptadas a la vulnerabilidad específica de cada región.
+
+Estados como Kansas, Oklahoma y Florida muestran frecuencias considerables de tornados, cada uno con su propio conjunto de consecuencias en términos de heridos, muertos y pérdidas económicas significativas. Estos datos resaltan la variabilidad en el impacto de los tornados en diferentes áreas, lo que subraya la importancia de medidas de prevención y respuesta adaptadas a las necesidades específicas de cada región para minimizar su devastador impacto.
+
+Por otra parte, el gráfico de barras apiladas muestra una clara variación en la frecuencia de tornados a lo largo de los meses en diferentes estados. Se destaca un pico significativo en los meses 5 y 6, con el mes 5 registrando el mayor número de tornados, alcanzando las 15,000 ocurrencias, seguido por 12,000 en el mes 6. Estos meses contrastan fuertemente con el verano, evidenciando una marcada disminución en la actividad, con menos de 2,500 tornados registrados. Aunque todos los estados sufren la incidencia de esta catástrofe natural en algún momento, la concentración de tornados es notablemente más alta en estos meses pico, resaltando la variabilidad estacional en la ocurrencia de estos eventos climáticos.
+

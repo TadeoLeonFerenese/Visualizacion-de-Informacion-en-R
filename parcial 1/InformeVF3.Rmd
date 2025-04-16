@@ -1,0 +1,69 @@
+---
+title: "Análisis periódico del subte"
+author: "Armoa - Ferenese"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+```
+
+**Introducción:** En esta sección se trabajará con un subset de la base de datos presentada previamente que hace foco en el uso del subte a lo largo del tiempo. Las variables disponibles para trabajar son:
+
+* ´periodo´: fecha, año y mes al que corresponde la cantidad de usos de sube.
+* ´linea´: caracter, linea de subte.
+* ´cantidad´: cantidad de usos de la sube.
+
+En esta sección queremos responder **¿Cómo es la evolución del uso de las líneas <completar con 1 o más lineas de subte> a lo largo del tiempo? ¿Qué cambios o eventos pueden explicar el comportamiento observado? **
+
+```{r}
+sube <- readr::read_delim("https://raw.githubusercontent.com/paocorrales/Visualizacion/main/datos/operaciones-de-viaje-limpio.csv",
+                          delim = ";") 
+```
+
+```{r preprocesamiento, message=FALSE, warning=FALSE, include=FALSE}
+subtes <- sube %>% 
+  filter(modo == "SUBTE"& periodo > lubridate::ymd(20140101)) %>%
+  group_by(periodo, linea) %>% 
+  summarise(cantidad = sum(suma_de_cantidad))
+```
+
+**Enfoque:**
+En esta sección, nos enfocaremos en responder la pregunta clave: "¿Cómo es la evolución del uso de las líneas de subte a lo largo del tiempo?". Para lograrlo, utilizaremos principalmente un gráfico de columnas apiladas, el cual representa la cantidad total de usos de cada línea de subte en diferentes períodos. Este tipo de gráfico es ideal para esta tarea porque permite comparar visualmente la contribución de cada línea al total, identificando tendencias y cambios a lo largo del tiempo. Además, hemos formateado el eje Y con comas para facilitar la legibilidad de los números. Este enfoque gráfico nos proporcionará una visión clara y concisa de la evolución del uso de las líneas de subte, lo que nos permitirá identificar patrones, cambios significativos y tendencias a lo largo del tiempo de manera efectiva.
+
+**Análisis:**
+
+```{r}
+periodolinea <- subtes %>%
+  group_by(periodo, linea) %>%
+  summarise(cantidad_total = sum(cantidad), .groups = "drop")
+
+```
+
+
+```{r}
+grafico <- ggplot(periodolinea, aes(x = periodo, y = cantidad_total, fill = linea)) +
+  geom_col() +
+  labs(title = "Suma de Usos de Líneas de Subte por Periodo",
+       x = "Periodo",
+       y = "Cantidad Total de Usos",
+       fill="Línea") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_y_continuous(labels = scales::comma)
+  
+print(grafico)
+```
+
+**Discusión**
+Como se puede ver, el progeso en el uso de las líneas de subte no sigue un patrón específico, ya que las personas acuden con más frecuencia a ciertos ramales. 
+Aún así, existen particularidades en su utilización. Por ejemplo: ¿Qué sucede con la línea premetro?  
+Bueno, el mismo es un tranvía ligero con una capacidad muy limitada de transporte, a su vez, no cuenta con rutas varias ni buena conexión con las áreas de Buenos Aires, ya que sus dos ramales solo cuentan con 14 estaciones. 
+
+¿Y si vamos al otro extremo? Dominando el podio de los más utilizados, nos encontramos con la línea A. La misma cuenta con conexiones en los puntos de intereses más céntricos de la ciudad, como lo puede ser Congreso. A su vez, la posibilidad de conexiones con otras lineas la hace una gran opción para combinar y llegar a cualquier punto de concurrencia. 
+Para destacar, la línea A es la más antigua de América Latina dándole un peso histórico; este suceso también explica su ubicación estratégica para una cobertura de excelencia. 
+
+Basándonos en la información brindada el dominio oficial de la [Ciudad de Buenos Aires](https://buenosaires.gob.ar/jefaturadegabinete/movilidad/subte?menu_id=20997), podemos entender que este crecimiento en todas las líneas de subte fue debido a los distintos proyectos expansión de las redes, una inversión importante en para la modernización de las estaciones y trenes de las líneas y por supuesto, a la demanda de transporte público que ejerció la urbanización y el crecimiento de la Ciudad. 

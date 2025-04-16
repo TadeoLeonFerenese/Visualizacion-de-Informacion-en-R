@@ -1,0 +1,254 @@
+---
+title: "La evolución del transporte (2013-2019). Armoa - Ferenese" 
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+library(tidyverse)
+library (forcats)
+library(dplyr)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+sube <- readr::read_delim("https://raw.githubusercontent.com/paocorrales/Visualizacion/main/datos/operaciones-de-viaje-limpio.csv",
+                          delim = ";") 
+
+  
+```
+
+La base de datos Operaciones de viaje por Periodo - Modo -
+Jurisdicción - Grupo Tarifario - Empresa - Línea - Tipo de Pasaje -
+Cantidad contiene información sobre viajes en trenes, subte, pre metro y
+colectivos entre 2013 y 2019. Esta base de datos se encuentra disponible
+en el portal [Datos
+Argentina](https://datos.gob.ar/it/dataset/transporte-sube-operaciones-viaje-por-mes-region-metropolitana-buenos-aires/archivo/transporte_faaf3cfa-9ce5-4f7a-8391-389ad9c2a83d).
+
+# **El transporte: Análisis y funcionamiento a lo largo de los años**
+
+**Pregunta:** ¿Cómo evolucionó el uso del colectivo respecto de otros
+medios de transporte a lo largo de los años? ¿Es igual para cualquier
+tipo de pasaje?
+
+### Introducción
+
+Nos encontramos en posesión de una base de datos oscilante entre los
+años 2013 y 2019, con el objetivo de constatar información sobre los
+viajes en distintos transportes públicos del pais. La misma nos brinda
+razón sobre el Periodo - Modo - Jurisdicción - Grupo Tarifario -
+Empresa - Línea - Tipo de Pasaje - Cantidad. Por ello, el fin de este
+informe es proyectar la evolución del colectivo respecto a otros medios
+de transporte y comparar la diferencia entre los diversos pasajes. Con
+esto claro, utilizaremos el periodo, el modo, la suma de las cantidades
+y el tipo de pasaje para obsevar si el medio predominante en dicho tramo
+fue variando y de qué modo.
+
+### Enfoque
+
+Llegados a esta instancia, realizaremos dos gráficos para representar
+los datos nombrados anteriormente y entender la estadística que presenta
+la operación del transporte a lo largo de los años.
+
+Priméramente, realizaremos un diagrama de columnas que nos enseñará el
+aumento del uso de los distintos transportes en este periodo
+seleccionado; Dicho modo de visualización fue seleccionado por su
+simpleza y claridad a la hora de mostrarnos estos elementos.
+
+Nuestro segundo gráfico será un diagrama de barras que nos muestre la
+cantidad de operaciones realizadas en colectivo y con qué tipo de pasaje
+se llevó a cabo la operación; Es utlizado este diagrama debido a las
+múltiples variables que presenta el objeto, buscando su lectura cómoda.
+Es por ello que también se optó por la inclinación a 45º de las
+variables en el eje X , caso contrario, su lectura sería imposible.
+
+### Análisis
+
+*¿Cómo evolucionó el uso del colectivo respecto de otros medios de
+transporte a lo largo de los años?* Podemos observar que todos los
+transportes tuvieron un crecimiento progresivo a lo largo de los años,
+pero con una gran diferencia el colectivo es el transporte público más
+utilizado del país. Tan grande es el abismo que se presenta en los
+gráficos, que siquiera en los últimos años del periodo estudiado logran
+los demás transportes acercarse a la frecuencia que presentaba la
+utilización del colectivo en el 2013/2014, ya que su bajo costo y
+alcance a los distintos rincones del país son factores difíciles de
+equiparar.
+
+*¿Es igual para cualquier tipo de pasaje?* Claramente no es igual para
+los diferentes tipos de pasaje, ya que la obtención de
+tarifas/beneficios sociales respecto al transporte son documentaciones a
+las cuales no todos tienen la posibilidad de acceder. En su mayoria,
+solo aquellas personas que cumplen con requisitos específicos contarán
+con un descuento a la hora de viajar. Sin embargo, no debemos pasar por
+alto la tarea de destacar el transporte público, siendo este el corazón
+de muchos trabajadores, estudiantes y personas sin vehículo propio que
+día a día hallan una forma de llegar a su destino por un precio
+realmente bajo y una comodidad con la cual no todo el mundo tiene la
+suerte de contar.
+
+### Evolución del transporte a lo largo de los años
+
+```{r}
+sube %>%
+  ggplot(aes(x = periodo, y = suma_de_cantidad, fill = modo)) +
+  geom_col(width = 20) +
+  labs(x = "Periodo", y = "Cantidad", fill = "Modo de transporte") +
+  theme_minimal()+
+  theme(axis.text.y = element_blank())+
+  facet_wrap()
+```
+
+## CORRECCION A LA PREGUNTA 1 parte 1 - OPCION 1
+```{r}
+sube %>% 
+  ggplot(aes(periodo, fill = modo))+
+  geom_histogram(color = "white", bins = 30)+
+  labs( x = "Periodo", y = "Cantidad", fill = "Modo de transporte")+
+  theme_minimal()
+```
+
+## CORRECCION A LA PREGUNTA 1 parte 1 - OPCION 2 
+
+```{r}
+sube %>% 
+  ggplot(aes( periodo))+
+  geom_density(aes(fill = modo))+
+  labs( x = "Periodo", y = "Cantidad", fill = "Modo de transporte")+
+  facet_wrap(~ modo, scales = "free_x")+ # EL FACE WRAP LO AGREGUE POR QUE SINO NO SE PUEDE LEER BIEN CARA UNA DE LAS AREAS, PERO AUN ASI SE VE QUE PREODIMNA EL BONDI
+  theme_minimal()+
+  scale_y_continuous(labels = scales::number)
+```
+
+### Operaciones en colectivo con distintos pasajes (Correcion para el recuperatorio OPCION 1)
+
+```{r}
+sube_filtrado <- sube %>% 
+  filter(modo == "COLECTIVO")
+
+ggplot(data = sube_filtrado, aes(y = tipo_pasaje, x = suma_de_cantidad, fill = modo)) +
+  geom_col(position = "dodge") +
+  labs(x = "Tipo de Pasaje", y = "Cantidad", fill = "Tipo de Pasaje") +
+  theme_minimal()+
+  scale_x_continuous(labels = scales::comma)
+```
+
+### Discusión
+
+En relación a los gráficos, debemos admitir que nos esperabamos los
+resultados obtenidos. La utilización del colectivo como transporte
+público masivo es lógica ya que se cuentan con infinitas líneas y
+empresas que nos llevan a todos los rincones del país. Así mismo, se
+puede observar como en los últimos años creció la utilización del subte
+
+En relación al segundo gráfico, también es de esperarse que el pico más
+alto se lo lleve la columna del pasaje normal de colectivo, siendo este
+el más utilizado por las personas que viajan en el mismo, ya que acceder
+a un tipo de beneficio no es sencillo y a la vez es ciertamente
+selectivo.
+
+# **Estudio enfocado en la venta de pasajes de colectivos**
+
+**Pregunta:** ¿Cómo varían los tipos de boletos vendidos por diferentes
+empresas de colectivo? ¿Qué ocurre si nos fijamos en la venta por
+jurisdicción?
+
+### Introducción:
+
+En el contexto de nuestro proyecto de analisis de datos, vamos a
+incursionarnos en la tarea de explorar y visualizar la distribucion de
+los tipos de boletos venididos por diversas empresas de colectivos en
+distintas jurisdicciones. La comprensión de cómo estos boletos se
+distribuyen a lo largo de diferentes regiones es fundamental para la
+toma de decisiones estratégicas en el sector del transporte. A través de
+este proyecto examinaremos las tendencias y patrones en la venta de
+boletos valiosos y descubrimientos claves que pueden ayudar a la empresa
+de colectivo a optimizar sus servicios y satisfacer las necesidades de
+sus clientes de manera más eficiente.
+
+### Enfoque:
+
+Para verificar los datos solicitados en las preguntas anteriores,
+realizaremos dos gráficos con el fin de visualizar de la mejor manera
+cómo varían los tipos de boletos vendidos por las diferentes empresas y
+en las distintas jurisdicciones a lo largo de los años.
+
+En el primer caso haremos pequeños gráficos destinados a cada uno de los
+grupos tarifarios, con el objetivo de visualizar cuál es el tipo de
+boleto más vendido en las diferentes empresas de transporte a lo largo
+de los años según cada grupo. Se optó por este tipo de geometría porque
+facilita la visualización de los datos requeridos y nos brinda detalle
+de diversos factores importantes.
+
+Para el segundo caso utilizaremos un grafico simple, para lograr una mayor
+claridad en la visualización de todos los datos relacionados con el tipo
+de pasaje más vendido en cada jurisdicción a lo largo de los años,
+logrando un gráfico simple y de fácil lectura.
+
+### Análisis:
+
+¿Cómo varían los tipos de boletos vendidos por diferentes empresas de
+colectivo? Podemos observar que a lo largo de los años hay un claro
+predominio de dos tipos de pasajes en particular que son "normal" y
+"atribución social" dejando en claro cuál es el sector que más usa este
+tipo de transportes.
+
+¿Como varía el tipo de boleto en las distintas jurisdicciones?"
+Observando el gráfico en detalle, en Provincia, Nación y Municipal a lo
+largo de los años, el tipo de pasaje que mas se utilizó es el "normal",
+seguido de "escolar" y por último "atribución social" dejando en claro
+nuevamente cuál es el predominio de los que viajan diariamente.
+
+### Distribución de Tipos de Boletos por Empresa
+
+```{r preprocesamiento, message=FALSE, warning=FALSE, include=FALSE}
+sube_empresas <- sube %>% 
+  group_by(empresa, grupo_tarifario) %>% 
+  summarise(cantidad = sum(empresa))
+```
+
+```{r}
+
+sube%>%
+  ggplot(aes(x = tipo_pasaje, y = empresa)) +
+    geom_col(aes(fill = tipo_pasaje)) +
+    labs(x = "Tipo De Pasaje", y = "Empresas",
+         title = "Distribución de Tipos de Boletos por Empresa",
+         fill = "Tipo de Pasaje") +
+    theme_bw() +
+    theme(axis.text.x = element_blank()) +
+    theme(axis.text.y = element_blank()) +
+    facet_wrap(~ grupo_tarifario, scales = "free_x")
+```
+
+### Tipo de Boleto segun la jurisdiccion
+
+```{r}
+sube %>%
+  filter(!is.na(jurisdiccion)) %>%
+  ggplot(aes(y = jurisdiccion)) +
+  geom_bar(aes(fill = tipo_pasaje), position = "dodge") + 
+  labs(y = "Utilización", x = "Jurisdicción", 
+       title = "Tipo de Boleto según la jurisdicción", 
+       fill = "Tipo de Pasaje") +
+  theme_bw()
+```
+
+### Discusión:
+
+Consideramos que los datos obtenidos son muy claros y lógicos, dado que
+la gran mayoría de personas que utiliza los diversos medios de
+transporte y tipos de boletos en estos casos son aquellas que viajan
+para dirigirse a sus lugares de trabajo, universidades, así como
+personas mayores o con diversas discapacidades.
+
+En el segundo gráfico, también es evidente que a nivel nacional,
+provincial y municipal hay un claro predominio sobre el resto, lo cual
+tiene sentido debido a que es donde reside la mayor concentración de
+personas, las cuales diariamente exprimen la eficacia del transporte
+para llegar a sus trabajos o instituciones de estudio.
+
+

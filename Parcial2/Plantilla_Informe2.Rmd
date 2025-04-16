@@ -1,0 +1,119 @@
+---
+title: "Informe práctico 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rnaturalearth)
+library(dplyr)
+tornados <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-16/tornados.csv')
+
+```
+
+Usaremos la base de datos con información de tornados de la [NOAA's National Weather Service Storm Prediction Center Severe Weather Maps, Graphics, and Data Page](https://www.spc.noaa.gov/wcm/#data) en Estados Unidos. 
+
+
+### **Parte 1**
+
+**Pregunta:** ¿Cómo es la distribución espacial de los tornados, existen zonas más afectas? ¿Cambia la distribución espacial según la magnitud de los tornados?
+
+
+**Introducción:** 
+"En mi exploración de la distribución espacial de tornados en los Estados Unidos, inicialmente calculé la frecuencia de tornados por estado. Utilicé datos geoespaciales de los estados y la frecuencia de tornados para crear una coropleta, destacando áreas más afectadas y excluyendo Alaska y Hawái para una visualización más centrada en las zonas mas afectadas ya que no hay actividad practicamente. Posteriormente, profundicé en la distribución, utilizando un gráfico de dispersión con jitter y ajustando los rangos geográficos para analizar la relación entre la magnitud de los tornados y su ubicación. Este enfoque revela patrones geográficos y proporciona una visión integral de la actividad de tornados en los Estados Unidos."
+
+**Enfoque:** 
+"En el análisis de la distribución espacial de tornados en Estados Unidos, adoptamos un enfoque multifacético. Inicialmente, mediante una coropleta, identificamos áreas más afectadas al calcular la frecuencia de tornados por estado y excluimos Alaska y Hawái para una visualización más precisa ya que no hay actividad practicamente. Luego, utilizando un gráfico de dispersión con jitter, refinamos nuestra exploración al ajustar los rangos geográficos, centrándonos en la relación entre la magnitud de los tornados y su ubicación. Este enfoque integral nos permitió examinar patrones geográficos y comprender cómo la magnitud impacta la distribución de tornados en el país."
+
+**Analisis:**
+
+# resolucion de ¿Cómo es la distribución espacial de los tornados, existen zonas más afectas?
+
+```{r}
+
+
+# Calcular la frecuencia de tornados por estado
+
+tornado_frequency <- tornados %>% 
+  group_by(st) %>% 
+  summarise(tornado_count = n())
+
+# Descargar datos
+
+Usa <- ne_states(country = 'united states of america', returnclass = 'sf') %>%
+  filter(! name %in% c('Alaska', 'Hawaii')) %>%
+  left_join(tornado_frequency,  c("postal" = "st"))
+
+
+# Crear el gráfico
+
+ggplot(Usa) +
+geom_sf(aes(fill = tornado_count))+
+   theme_minimal() +
+   theme(
+    legend.background = element_rect(fill = "gray", color = "black", linewidth = 1),
+    panel.background = element_rect(fill = "gray", color = "black", linewidth = 2)
+  )
+
+```
+# resolucion ¿Cambia la distribución espacial según la magnitud de los tornados?
+
+```{r}
+
+
+# Calcular la frecuencia de tornados por estado
+tornado_frequency <- tornados %>% 
+  group_by(st) %>% 
+  summarise(tornado_count = n())
+
+# Descargar datos
+Usa <- ne_states(country = 'united states of america', returnclass = 'sf') %>%
+  filter(! name %in% c('Alaska', 'Hawaii'))
+
+# Crear el gráfico con jitter
+ggplot() +
+    geom_jitter(
+    data = filter(tornados, slon >= -135 & slat >= 20),  # Excluir puntos con longitud menor a -130 y latitud menor a 20
+    aes(x = slon, y = slat, color = mag),
+    alpha = 0.7,
+    width = 0.1,
+    height = 0.1
+  ) +
+  geom_sf(data = Usa, fill = NA, color = "black") +
+  scale_color_viridis_c() +
+  labs(
+    title = "Distribución espacial de tornados en Estados Unidos",
+    x = "Longitud",
+    y = "Latitud",
+    color = "Magnitud"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.background = element_rect(fill = "gray", color = "black", linewidth = 1),
+    panel.background = element_rect(fill = "gray", color = "black", linewidth = 2)
+  )
+
+```
+
+**Discusión:** 
+"Este análisis detallado de la distribución espacial de tornados en los Estados Unidos revela la importancia de un enfoque integral. La exclusión de Alaska y Hawái, dados sus bajos niveles de actividad, permite una visualización más precisa de las zonas más afectadas en la coropleta. Al explorar la relación entre la magnitud de los tornados y su ubicación mediante un gráfico de dispersión, identificamos patrones geográficos significativos. Esta aproximación no solo resalta la diversidad en la intensidad y ubicación de los tornados, sino que también destaca la utilidad de considerar múltiples dimensiones para comprender mejor estos fenómenos meteorológicos en el contexto geográfico de los Estados Unidos."
+
+### **Parte 2**
+
+**Pregunta:** *Tu pregunta va a aquí*
+
+**Introducción:** *Tu introducción va aqui*
+
+**Enfoque:** *Tu forma de resolución va aquí*
+
+**Analisis:**
+
+```{r }
+# Tu código de R va aquí
+```
+
+```{r }
+# Tu código de R va aquí
+```
+
+**Discusión:** *Tu discusión de los resultados va aquí.*

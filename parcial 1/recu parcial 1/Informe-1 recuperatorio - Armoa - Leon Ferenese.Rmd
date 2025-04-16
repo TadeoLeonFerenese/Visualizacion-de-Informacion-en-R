@@ -1,0 +1,310 @@
+---
+title: "La evolución del transporte (2013-2019). Armoa - Ferenese" 
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r}
+library(tidyverse)
+library (forcats)
+library(lubridate)
+library(dplyr)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+sube <- readr::read_delim("https://raw.githubusercontent.com/paocorrales/Visualizacion/main/datos/operaciones-de-viaje-limpio.csv",
+                          delim = ";") 
+
+  
+```
+
+La base de datos Operaciones de viaje por Periodo - Modo -
+Jurisdicción - Grupo Tarifario - Empresa - Línea - Tipo de Pasaje -
+Cantidad contiene información sobre viajes en trenes, subte, pre metro y
+colectivos entre 2013 y 2019. Esta base de datos se encuentra disponible
+en el portal [Datos
+Argentina](https://datos.gob.ar/it/dataset/transporte-sube-operaciones-viaje-por-mes-region-metropolitana-buenos-aires/archivo/transporte_faaf3cfa-9ce5-4f7a-8391-389ad9c2a83d).
+
+# **El transporte: Análisis y funcionamiento a lo largo de los años**
+
+**Pregunta:** ¿Cómo evolucionó el uso del colectivo respecto de otros
+medios de transporte a lo largo de los años? ¿Es igual para cualquier
+tipo de pasaje?
+
+### Introducción
+
+Nos encontramos en posesión de una base de datos oscilante entre los
+años 2013 y 2019, con el objetivo de constatar información sobre los
+viajes en distintos transportes públicos del pais. La misma nos brinda
+razón sobre el Periodo - Modo - Jurisdicción - Grupo Tarifario -
+Empresa - Línea - Tipo de Pasaje - Cantidad. Por ello, el fin de este
+informe es proyectar la evolución del colectivo respecto a otros medios
+de transporte y comparar la diferencia entre los diversos pasajes. Con
+esto claro, utilizaremos el periodo, el modo, la suma de las cantidades
+y el tipo de pasaje para obsevar si el medio predominante en dicho tramo
+fue variando y de qué modo.
+
+### Enfoque
+
+Llegados a esta instancia, realizaremos dos gráficos para representar
+los datos nombrados anteriormente y entender la estadística que presenta
+la operación del transporte a lo largo de los años.
+
+Priméramente, realizaremos un diagrama de columnas que nos enseñará el
+aumento del uso de los distintos transportes en este periodo
+seleccionado; Dicho modo de visualización fue seleccionado por su
+simpleza y claridad a la hora de mostrarnos estos elementos.
+
+Nuestro segundo gráfico será un diagrama de columnas pero de manera
+horizontal, el cual logra que nos muestre la cantidad de operaciones realizadas en colectivo 
+y con qué tipo de pasaje se llevó a cabo la operación.
+Es utlizado este diagrama debido a las
+múltiples variables que presenta el objeto, buscando su lectura cómoda y la 
+sencillez para que todas las personas que tengan acceso al gráfico 
+puedan entenderlo sin esfuerzo.
+
+### Análisis
+
+¿Cómo ha evolucionado el uso del colectivo en comparación con otros medios de transporte a
+lo largo de los años? Podemos observar que el subte y el tren han experimentado un aumento
+progresivo y constante a lo largo de los años, a diferencia del colectivo, que ha mostrado
+una ligera disminución en los últimos años, aunque esto no afecta en absoluto su dominio 
+sobre otros medios de transporte en el país. En los últimos años del período estudiado, los demás
+transportes han logrado acercarse a la frecuencia que presentaba la utilización del 
+colectivo en 2013/2014, ya que su bajo costo y alcance a distintas áreas del país son 
+factores difíciles de igualar.
+
+*¿Es igual para cualquier tipo de pasaje?* Claramente no es igual para
+los diferentes tipos de pasaje, podemos observar el dominio que presentan
+los tipos de boletos normales y los de atributo social. En su mayoria,
+solo aquellas personas que cumplen con requisitos específicos contarán
+con un descuento a la hora de viajar. Sin embargo, no debemos pasar por
+alto la tarea de destacar el transporte público, siendo este el corazón
+de muchos trabajadores, estudiantes y personas sin vehículo propio que
+día a día hallan una forma de llegar a su destino por un precio
+realmente bajo y una comodidad con la cual no todo el mundo tiene la
+suerte de contar.
+
+### Evolución del transporte a lo largo de los años
+
+```{r}
+sube_agrupado <- sube %>%
+  group_by(modo, periodo ) %>%  
+   summarise(suma_de_cantidad = sum(suma_de_cantidad), .groups = "drop")
+```
+
+
+```{r}
+sube_agrupado %>%
+  ggplot(aes(x = periodo, y = suma_de_cantidad, fill = modo)) +
+  geom_col(width = 20) +
+  labs(x = "Periodo", y = "Cantidad de usos de la Sube", fill = "Modo de transporte") +
+  theme_minimal() +
+  theme(axis.text.y = element_blank())+
+ facet_wrap(~modo)
+
+```
+
+### Operaciones en colectivo con distintos pasajes
+
+```{r}
+sube_filtrado <- sube %>% 
+  filter(modo == "COLECTIVO")
+
+ggplot(data = sube_filtrado, aes(y = tipo_pasaje, x = suma_de_cantidad, fill = modo)) +
+  geom_col(position = "dodge") +
+  labs(x = "Frecuencia", y = "Tipo de pasaje", fill = "Tipo de Pasaje") +
+  theme_minimal()+
+  theme(axis.text.x = element_blank())
+```
+
+
+### Discusión
+
+En relación a los gráficos, debemos admitir que nos esperabamos los
+resultados obtenidos. La utilización del colectivo como transporte
+público masivo es lógica ya que se cuentan con infinitas líneas y
+empresas que nos llevan a todos los rincones del país. Así mismo, se
+puede observar como en los últimos años creció la utilización del subte
+y tren, que son medios destacados por los estudiantes y trabajadores.
+
+En relación al segundo gráfico, también es de esperarse que el pico más
+alto se lo lleve la columna del pasaje normal de colectivo, siendo este
+el más utilizado por las personas que viajan en el mismo, ya que acceder
+a un tipo de beneficio no es sencillo y a la vez es ciertamente
+selectivo.
+
+# **Estudio enfocado en la venta de pasajes de colectivos**
+
+**Pregunta:** ¿Cómo varían los tipos de boletos vendidos por diferentes
+empresas de colectivo? ¿Qué ocurre si nos fijamos en la venta por
+jurisdicción de los distintos transportes?
+
+### Introducción:
+
+En el contexto de nuestro proyecto de analisis de datos, vamos a
+incursionarnos en la tarea de explorar y visualizar la distribucion de
+los tipos de boletos venididos por diversas empresas de colectivos en
+distintas jurisdicciones. La comprensión de cómo estos boletos se
+distribuyen a lo largo de diferentes regiones es fundamental para la
+toma de decisiones estratégicas en el sector del transporte. A través de
+este proyecto examinaremos las tendencias y patrones en la venta de
+boletos valiosos y descubrimientos claves que pueden ayudar a la empresa
+de colectivo a optimizar sus servicios y satisfacer las necesidades de
+sus clientes de manera más eficiente.
+
+### Enfoque:
+
+Para verificar los datos solicitados en las preguntas anteriores,
+realizaremos dos gráficos con el fin de visualizar de la mejor manera
+cómo varían los tipos de boletos vendidos por las diferentes empresas y
+en las distintas jurisdicciones a lo largo de los años.
+
+En el primer caso haremos pequeños gráficos destinados a cada uno de los
+distintos tipos de pasaje, con el objetivo de visualizar cuál es el tipo de
+boleto más vendido en las diferentes empresas de transporte a lo largo
+de los años según cada grupo. Si bien son demasiadas empresas, 
+haremos una comparativa entre las 9 (nueve) más concurridas. 
+Se optó por este tipo de geometría porque facilita la visualización de los datos requeridos 
+y nos brinda detalle de muchos factores importantes.
+
+Para el segundo caso utilizaremos un grafico simple de barras, para lograr una mayor
+claridad en la visualización de todos los datos relacionados con el tipo
+de pasaje más vendido en cada jurisdicción a lo largo de los años,
+logrando un gráfico de fácil lectura.
+
+### Análisis:
+
+¿Cómo varían los tipos de boletos vendidos por diferentes empresas de
+colectivo? Podemos observar que a lo largo de los años hay un claro
+predominio de dos tipos de pasajes en particular que son "normal" y
+"atributo social" dejando en claro cuál es el sector que más usa este
+tipo de transportes.
+
+¿Como varía el tipo de boleto en las distintas jurisdicciones y en los distintos
+medios de transporte?"
+Al analizar minuciosamente el gráfico a lo largo de los años en áreas provinciales, nacionales y municipales, 
+se observa que el tipo de pasaje más comúnmente utilizado es el "normal", 
+seguido por el "escolar" y, finalmente, el "atributo social".
+
+### Distribución de Tipos de Boletos por Empresa
+
+```{r}
+empresa_counts <- sube %>%
+  count(empresa) %>%
+  arrange(desc(n))
+```
+
+
+```{r}
+top_9_empresas <- empresa_counts %>%
+  head(9) %>%
+  pull(empresa)
+```
+
+
+```{r}
+sube %>%
+  filter(empresa %in% top_9_empresas) %>%
+  ggplot(aes(x = tipo_pasaje, y = empresa)) +
+    geom_col(aes(fill = tipo_pasaje)) +
+    labs(x = "Tipo De Pasaje", y = "Empresas",
+         title = "Distribución de Tipos de Boletos por Empresa",
+         fill = "Tipo de Pasaje") +
+    theme_bw() +
+    theme(axis.text.x = element_blank()) +
+    theme(axis.text.y = element_blank()) +
+    facet_wrap(~empresa, scales = "free_x")
+
+```
+
+### Tipo de Boleto segun la jurisdiccion
+
+```{r}
+sube %>%
+  filter(!is.na(jurisdiccion)) %>%  
+  ggplot(aes(y = jurisdiccion)) +
+  geom_bar(aes(fill = tipo_pasaje), position = "dodge") + 
+  labs(y = "Utilización", x = "Jurisdicción", 
+       title = "Tipo de Boleto según la jurisdicción", 
+       fill = "Tipo de Pasaje") +
+  theme_bw()
+```
+
+### Discusión:
+
+Consideramos que los datos obtenidos son muy claros y lógicos, dado que
+la gran mayoría de personas que utiliza los diversos medios de
+transporte y tipos de boletos en estos casos son aquellas que viajan
+para dirigirse a sus lugares de trabajo, universidades, así como
+personas mayores o con diversas discapacidades.
+
+En el segundo gráfico, la predominancia del tipo de pasaje "normal" se debe a su
+amplia accesibilidad, adaptación a las necesidades cotidianas y uso frecuente, 
+lo que lo convierte en la opción principal de transporte público para la mayoría 
+de las personas. Los tipos "escolar" y "atributo social" si bien son menos utilizados
+debido a sus restricciones y aplicaciones más específicas, siguen siendo de gran
+frecuencia, ya que los estudiantes y personas que cumplen con los requisitos de 
+la tarifa, utilizan constantemente el beneficio del transporte público para 
+cumplir todos los días con sus amplias responsabilidades.
+
+
+# **Estudio enfocado en el uso de Subte a lo largo de los años**
+
+**Introducción:** En esta sección se trabajará con un subtes de la base de datos presentada previamente que hace foco en el uso del subte a lo largo del tiempo. Las variables disponibles para trabajar son:
+
+* ´periodo´: fecha, año y mes al que corresponde la cantidad de usos de sube.
+* ´linea´: caracter, linea de subte.
+* ´cantidad´: cantidad de usos de la sube.
+
+En esta sección queremos responder **¿Cómo es la evolución del uso de las líneas <completar con 1 o más lineas de subte> a lo largo del tiempo? ¿Qué cambios o eventos pueden explicar el comportamiento observado? **
+
+```{r preprocesamiento, message=FALSE, warning=FALSE, include=FALSE}
+subtes <- sube %>% 
+  filter(modo == "SUBTE"& periodo > lubridate::ymd(20140101)) %>%
+  group_by(periodo, linea) %>% 
+  summarise(cantidad = sum(suma_de_cantidad))
+```
+
+**Enfoque:**
+En esta sección, nos enfocaremos en responder la pregunta clave: "¿Cómo es la evolución del uso de las líneas de subte a lo largo del tiempo?". Para lograrlo, utilizaremos principalmente un gráfico de columnas apiladas, el cual representa la cantidad total de usos de cada línea de subte en diferentes períodos. Este tipo de gráfico es ideal para esta tarea porque permite comparar visualmente la contribución de cada línea al total, identificando tendencias y cambios a lo largo del tiempo. Además, hemos formateado el eje Y con comas para facilitar la legibilidad de los números. Este enfoque gráfico nos proporcionará una visión clara y concisa de la evolución del uso de las líneas de subte, lo que nos permitirá identificar patrones, cambios significativos y tendencias a lo largo del tiempo de manera efectiva.
+
+**Análisis:**
+
+```{r}
+periodolinea <- subtes %>%
+  group_by(periodo, linea) %>%
+  summarise(cantidad_total = sum(cantidad), .groups = "drop")
+
+```
+
+
+```{r}
+grafico <- ggplot(periodolinea, aes(x = periodo, y = cantidad_total, fill = linea)) +
+  geom_col() +
+  labs(title = "Suma de Usos de Líneas de Subte por Periodo",
+       x = "Periodo",
+       y = "Cantidad Total de Usos",
+       fill="Línea") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_y_continuous(labels = scales::comma)+ 
+  facet_wrap(~linea)
+  
+  
+print(grafico)
+```
+
+**Discusión**
+Como se puede ver, el progeso en el uso de las líneas de subte no sigue un patrón específico, ya que las personas acuden con más frecuencia a ciertos ramales. 
+Aún así, existen particularidades en su utilización. Por ejemplo: ¿Qué sucede con la línea premetro?  
+Bueno, el mismo es un tranvía ligero con una capacidad muy limitada de transporte, a su vez, no cuenta con rutas varias ni buena conexión con las áreas de Buenos Aires, ya que sus dos ramales solo cuentan con 14 estaciones. 
+
+¿Y si vamos al otro extremo? Dominando el podio de los más utilizados, nos encontramos con la línea A. La misma cuenta con conexiones en los puntos de intereses más céntricos de la ciudad, como lo puede ser Congreso. A su vez, la posibilidad de conexiones con otras lineas la hace una gran opción para combinar y llegar a cualquier punto de concurrencia. 
+Para destacar, la línea A es la más antigua de América Latina dándole un peso histórico; este suceso también explica su ubicación estratégica para una cobertura de excelencia. 
+
+Basándonos en la información brindada el dominio oficial de la [Ciudad de Buenos Aires](https://buenosaires.gob.ar/jefaturadegabinete/movilidad/subte?menu_id=20997), podemos entender que este crecimiento en todas las líneas de subte fue debido a los distintos proyectos expansión de las redes, una inversión importante en para la modernización de las estaciones y trenes de las líneas y por supuesto, a la demanda de transporte público que ejerció la urbanización y el crecimiento de la Ciudad. 
+
